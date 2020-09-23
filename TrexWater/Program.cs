@@ -16,7 +16,9 @@ namespace TrexWater
 
 		private static void DD()
 		{
-			WaterController controller = new WaterController(Pi.Gpio[BcmPin.Gpio26], 0.01);
+			var pin = Pi.Gpio[BcmPin.Gpio26];
+			pin.PinMode = GpioPinDriveMode.Output;
+			WaterController controller = new WaterController(pin, 0.01);
 
 			while (true)
 			{
