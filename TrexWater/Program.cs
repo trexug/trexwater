@@ -2,6 +2,7 @@
 using System.Threading;
 using Unosquare.RaspberryIO;
 using Unosquare.RaspberryIO.Abstractions;
+using Unosquare.WiringPi;
 
 namespace TrexWater
 {
@@ -9,6 +10,7 @@ namespace TrexWater
 	{
 		static void Main(string[] args)
 		{
+			Pi.Init<BootstrapWiringPi>();
 			DD();
 		}
 
