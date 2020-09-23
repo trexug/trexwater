@@ -23,7 +23,7 @@ namespace TrexWater
 
 		public void TurnOn()
 		{
-			if (!IsOn)
+			if (IsOn)
 			{
 				throw new InvalidOperationException($"{nameof(WaterController)} is already on.");
 			}
