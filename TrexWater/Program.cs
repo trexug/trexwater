@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Threading;
+using Unosquare.RaspberryIO;
+using Unosquare.RaspberryIO.Abstractions;
 
 namespace TrexWater
 {
@@ -6,7 +9,19 @@ namespace TrexWater
 	{
 		static void Main(string[] args)
 		{
-			Console.WriteLine("Hello World!");
+			DD();
+		}
+
+		private static void DD()
+		{
+			WaterController controller = new WaterController(Pi.Gpio[BcmPin.Gpio26], 0.01);
+
+			while (true)
+			{
+				controller.TurnOn();
+				Thread.Sleep(1000);
+				controller.TurnOff();
+			}
 		}
 	}
 }
