@@ -29,6 +29,7 @@ namespace TrexWater
 			}
 
 			Pin.Write(true);
+			IsOn = true;
 			TurnedOnTime = DateTime.Now;
 		}
 
@@ -40,6 +41,7 @@ namespace TrexWater
 			}
 
 			Pin.Write(false);
+			IsOn = false;
 			DateTime now = DateTime.Now;
 			TimeSpan span = now - TurnedOnTime;
 			return new WateringSession(TurnedOnTime, now, span.TotalSeconds * LitersPerSecond);
