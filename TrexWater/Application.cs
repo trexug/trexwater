@@ -66,10 +66,10 @@ namespace TrexWater
 				{
 					c.TurnOn();
 					Logger.LogTrace("Going to sleep..");
-					Thread.Sleep(1500);
+					Thread.Sleep(2000);
 					c.TurnOff();
 					Logger.LogTrace("Going to sleep..");
-					Thread.Sleep(1500);
+					Thread.Sleep(500);
 				}
 			}
 			catch (Exception ex)

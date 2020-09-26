@@ -7,7 +7,9 @@ namespace TrexWaterTest.Mock
 	{
 		public IGpioPin CreatePin(BcmPin id, GpioPinDriveMode mode = GpioPinDriveMode.Output)
 		{
-			return new TestGpioPin(id);
+			var pin = new TestGpioPin(id);
+			pin.PinMode = mode;
+			return pin;
 		}
 	}
 }

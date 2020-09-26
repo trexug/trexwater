@@ -31,7 +31,7 @@ namespace TrexWater
 		{
 			Pi.Init<BootstrapWiringPi>();
 			return serviceCollection
-				.AddLogging()
+				.AddLogging(lb => lb.AddConsole())
 				.AddSingleton<ITimeProvider, TimeProvider>()
 				.AddSingleton<IGpioPinFactory, PiGpioPinFactory>()
 				.AddSingleton<IWaterControllerFactory, WaterControllerFactory>()
