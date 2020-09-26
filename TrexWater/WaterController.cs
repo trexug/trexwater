@@ -6,19 +6,23 @@ using Unosquare.RaspberryIO.Abstractions;
 
 namespace TrexWater
 {
-	public class WaterController
+	public class WaterController : IWaterController
 	{
 		public IGpioPin Pin { get; }
 		private DateTime TurnedOnTime { get; set; }
 		public bool IsOn { get; private set; }
 		public double LitersPerSecond { get; }
+		private ITimeProvider TimeProvider { get; }
 
-		public WaterController(IGpioPin pin, double litersPerSecond)
+		public WaterController(IGpioPin pin, double litersPerSecond, ITimeProvider timeProvider)
 		{
+			TimeProvider = timeProvider;
+
 			Pin = pin;
 			LitersPerSecond = litersPerSecond;
 			TurnedOnTime = default;
 			IsOn = pin.Value;
+			TurnedOnTime = IsOn ? TimeProvider.Now : default;
 		}
 
 		public void TurnOn()
@@ -30,7 +34,7 @@ namespace TrexWater
 
 			Pin.Write(true);
 			IsOn = true;
-			TurnedOnTime = DateTime.Now;
+			TurnedOnTime = TimeProvider.Now;
 		}
 
 		public WateringSession TurnOff()
@@ -42,7 +46,7 @@ namespace TrexWater
 
 			Pin.Write(false);
 			IsOn = false;
-			DateTime now = DateTime.Now;
+			DateTime now = TimeProvider.Now;
 			TimeSpan span = now - TurnedOnTime;
 			return new WateringSession(TurnedOnTime, now, span.TotalSeconds * LitersPerSecond);
 		}

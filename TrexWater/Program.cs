@@ -1,31 +1,42 @@
-﻿using System;
-using System.Threading;
+﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using System;
 using Unosquare.RaspberryIO;
-using Unosquare.RaspberryIO.Abstractions;
 using Unosquare.WiringPi;
 
 namespace TrexWater
 {
-	class Program
+	public class Program
 	{
-		static void Main(string[] args)
+		public static void Main(string[] args)
 		{
-			Pi.Init<BootstrapWiringPi>();
-			DD();
+			Program program = new Program();
+			program.RunMain();
 		}
 
-		private static void DD()
+		public void RunMain()
 		{
-			var pin = Pi.Gpio[BcmPin.Gpio26];
-			pin.PinMode = GpioPinDriveMode.Output;
-			WaterController controller = new WaterController(pin, 0.01);
+			var serviceProvider = ConfigureServices(new ServiceCollection());
 
-			while (true)
-			{
-				controller.TurnOn();
-				Thread.Sleep(1000);
-				controller.TurnOff();
-			}
+			var logger = serviceProvider.GetService<ILoggerFactory>()
+				.CreateLogger<Program>();
+			logger.LogDebug("Service setup complete");
+
+			var application = serviceProvider.GetService<IApplication>();
+			application.Initialize();
+			application.Run();
+		}
+
+		protected virtual IServiceProvider ConfigureServices(IServiceCollection serviceCollection)
+		{
+			Pi.Init<BootstrapWiringPi>();
+			return serviceCollection
+				.AddLogging()
+				.AddSingleton<ITimeProvider, TimeProvider>()
+				.AddSingleton<IGpioPinFactory, PiGpioPinFactory>()
+				.AddSingleton<IWaterControllerFactory, WaterControllerFactory>()
+				.AddSingleton<IApplication, Application>()
+				.BuildServiceProvider();
 		}
 	}
 }
