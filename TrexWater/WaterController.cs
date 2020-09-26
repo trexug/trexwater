@@ -8,8 +8,8 @@ namespace TrexWater
 {
 	public class WaterController : IWaterController
 	{
-		private const bool PIN_ON = false;
-		private const bool PIN_OFF = true;
+		public const bool PIN_ON = false;
+		public const bool PIN_OFF = true;
 		public IGpioPin Pin { get; }
 		private DateTime TurnedOnTime { get; set; }
 		public bool IsOn { get; private set; }

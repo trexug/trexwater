@@ -41,6 +41,7 @@ namespace TrexWater
 			foreach (var config in waterControllerConfigs)
 			{
 				IGpioPin pin = GpioPinFactory.CreatePin(config.PinId);
+				pin.Write(WaterController.PIN_OFF);
 				IWaterController waterController = WaterControllerFactory.CreateWaterController(pin, config.LitersPerSecond);
 
 				IdToWaterController.Add(config.Id, waterController);
@@ -49,6 +50,9 @@ namespace TrexWater
 			IsInitialized = true;
 			Logger.LogInformation("Application initialized");
 		}
+
+		public IWaterController this[string id] => IdToWaterController[id];
+
 		public void Run()
 		{
 			if (!IsInitialized)
