@@ -5,9 +5,11 @@ namespace TrexWater
 {
 	public class PiGpioPinFactory : IGpioPinFactory
 	{
-		public IGpioPin CreatePin(BcmPin id)
+		public IGpioPin CreatePin(BcmPin id, GpioPinDriveMode mode = GpioPinDriveMode.Output)
 		{
-			return Pi.Gpio[id];
+			var pin = Pi.Gpio[id];
+			pin.PinMode = mode;
+			return pin;
 		}
 	}
 }

@@ -4,6 +4,6 @@ namespace TrexWater
 {
 	public interface IGpioPinFactory
 	{
-		IGpioPin CreatePin(BcmPin id);
+		IGpioPin CreatePin(BcmPin id, GpioPinDriveMode mode = GpioPinDriveMode.Output);
 	}
 }
