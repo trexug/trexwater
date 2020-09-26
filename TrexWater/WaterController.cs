@@ -8,6 +8,8 @@ namespace TrexWater
 {
 	public class WaterController : IWaterController
 	{
+		private const bool PIN_ON = false;
+		private const bool PIN_OFF = true;
 		public IGpioPin Pin { get; }
 		private DateTime TurnedOnTime { get; set; }
 		public bool IsOn { get; private set; }
@@ -32,7 +34,7 @@ namespace TrexWater
 				throw new InvalidOperationException($"{nameof(WaterController)} is already on.");
 			}
 
-			Pin.Write(true);
+			Pin.Write(PIN_ON);
 			IsOn = true;
 			TurnedOnTime = TimeProvider.Now;
 		}
@@ -44,7 +46,7 @@ namespace TrexWater
 				throw new InvalidOperationException($"{nameof(WaterController)} is already off.");
 			}
 
-			Pin.Write(false);
+			Pin.Write(PIN_OFF);
 			IsOn = false;
 			DateTime now = TimeProvider.Now;
 			TimeSpan span = now - TurnedOnTime;
