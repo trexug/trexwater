@@ -66,7 +66,7 @@ namespace TrexWater
 			try
 			{
 				var c = IdToWaterController["B01"];
-				while (true)
+				for (int i = 0;  i < 10; ++i)
 				{
 					c.TurnOn();
 					Logger.LogTrace("Going to sleep..");

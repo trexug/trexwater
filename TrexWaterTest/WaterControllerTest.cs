@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using TrexWater;
 using TrexWaterTest.Mock;
 using Xunit;
@@ -31,19 +29,21 @@ namespace TrexWaterTest
 		[Fact]
 		public void TurnOffTwiceFails()
 		{
+			WaterController01.WaterController.TurnOn();
+			WaterController01.WaterController.TurnOff();
 			Assert.ThrowsAny<InvalidOperationException>(() => WaterController01.WaterController.TurnOff());
 		}
 		[Fact]
 		public void TurnSetGpio()
 		{
 			WaterController01.WaterController.TurnOn();
-			Assert.True(WaterController01.GpioPin.Value);
+			Assert.True(WaterController01.GpioPin.OutputValue == WaterController.PIN_ON);
 			WaterController01.WaterController.TurnOff();
-			Assert.False(WaterController01.GpioPin.Value);
+			Assert.True(WaterController01.GpioPin.OutputValue == WaterController.PIN_OFF);
 			WaterController01.WaterController.TurnOn();
-			Assert.True(WaterController01.GpioPin.Value);
+			Assert.True(WaterController01.GpioPin.OutputValue == WaterController.PIN_ON);
 			WaterController01.WaterController.TurnOff();
-			Assert.False(WaterController01.GpioPin.Value);
+			Assert.True(WaterController01.GpioPin.OutputValue == WaterController.PIN_OFF);
 		}
 		[Fact]
 		public void CalculatesWaterUsage()

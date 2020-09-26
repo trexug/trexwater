@@ -15,6 +15,8 @@ namespace TrexWaterTest.Mock
 		{
 			TimeProvider = new TestTimeProvider();
 			GpioPin = new TestGpioPin(id);
+			GpioPin.PinMode = GpioPinDriveMode.Output;
+			GpioPin.Write(WaterController.PIN_OFF);
 			WaterController = new WaterController(GpioPin, litersPerSecond, TimeProvider);
 		}
 	}

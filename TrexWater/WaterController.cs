@@ -23,8 +23,8 @@ namespace TrexWater
 			Pin = pin;
 			LitersPerSecond = litersPerSecond;
 			TurnedOnTime = default;
-			IsOn = pin.Value;
-			TurnedOnTime = IsOn ? TimeProvider.Now : default;
+			IsOn = false;
+			TurnedOnTime = default;
 		}
 
 		public void TurnOn()

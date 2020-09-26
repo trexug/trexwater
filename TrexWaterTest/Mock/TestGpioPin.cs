@@ -12,6 +12,7 @@ namespace TrexWaterTest.Mock
 			BcmPin = id;
 			PinMode = GpioPinDriveMode.Input;
 		}
+		public bool OutputValue { get; set; }
 		public BcmPin BcmPin { get; }
 
 		public int BcmPinNumber => (int)BcmPin;
@@ -24,7 +25,8 @@ namespace TrexWaterTest.Mock
 		public GpioPinResistorPullMode InputPullMode { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
 		public bool Value
 		{
-			get => throw new NotImplementedException(); set => throw new NotImplementedException();
+			get => throw new NotImplementedException();
+			set => Write(value);
 		}
 
 		public bool Read()
@@ -58,13 +60,21 @@ namespace TrexWaterTest.Mock
 		}
 
 		public void Write(bool value)
-		{
-			Value = value;
-		}
+		   => Write(value ? GpioPinValue.High : GpioPinValue.Low);
 
 		public void Write(GpioPinValue value)
 		{
-			Value = value == GpioPinValue.High;
+			lock (this)
+			{
+				if (PinMode != GpioPinDriveMode.Output)
+				{
+					throw new InvalidOperationException(
+						$"Unable to write to pin {BcmPinNumber} because operating mode is {PinMode}."
+						+ $" Writes are only allowed if {nameof(PinMode)} is set to {GpioPinDriveMode.Output}");
+				}
+
+				OutputValue = value == GpioPinValue.High;
+			}
 		}
 	}
 }
