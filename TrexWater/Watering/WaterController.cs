@@ -2,9 +2,10 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Text;
+using TrexWater.Common;
 using Unosquare.RaspberryIO.Abstractions;
 
-namespace TrexWater
+namespace TrexWater.Watering
 {
 	public class WaterController : IWaterController
 	{

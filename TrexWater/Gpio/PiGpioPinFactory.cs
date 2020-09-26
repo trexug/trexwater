@@ -1,7 +1,7 @@
 ﻿using Unosquare.RaspberryIO;
 using Unosquare.RaspberryIO.Abstractions;
 
-namespace TrexWater
+namespace TrexWater.Gpio
 {
 	public class PiGpioPinFactory : IGpioPinFactory
 	{

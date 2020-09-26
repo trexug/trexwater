@@ -1,6 +1,9 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;
+using TrexWater.Common;
+using TrexWater.Gpio;
+using TrexWater.Watering;
 using Unosquare.RaspberryIO;
 using Unosquare.WiringPi;
 
@@ -22,20 +25,22 @@ namespace TrexWater
 				.CreateLogger<Program>();
 			logger.LogDebug("Service setup complete");
 
-			var application = serviceProvider.GetService<IApplication>();
-			application.Initialize();
-			application.Run();
+			
 		}
 
 		protected virtual IServiceProvider ConfigureServices(IServiceCollection serviceCollection)
 		{
 			Pi.Init<BootstrapWiringPi>();
 			return serviceCollection
-				.AddLogging(lb => lb.AddConsole())
+				.AddLogging
+				(
+					lb => lb
+						.AddConsole()
+						.SetMinimumLevel(LogLevel.Trace)
+				)
 				.AddSingleton<ITimeProvider, TimeProvider>()
 				.AddSingleton<IGpioPinFactory, PiGpioPinFactory>()
 				.AddSingleton<IWaterControllerFactory, WaterControllerFactory>()
-				.AddSingleton<IApplication, Application>()
 				.BuildServiceProvider();
 		}
 	}

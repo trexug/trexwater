@@ -1,5 +1,6 @@
 ﻿using System;
 using TrexWater;
+using TrexWater.Common;
 
 namespace TrexWaterTest.Mock
 {

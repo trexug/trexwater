@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using TrexWater;
+using TrexWater.Watering;
 using Unosquare.RaspberryIO.Abstractions;
 
 namespace TrexWaterTest.Mock

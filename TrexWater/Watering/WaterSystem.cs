@@ -2,20 +2,21 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using TrexWater.Gpio;
 using Unosquare.RaspberryIO.Abstractions;
 
-namespace TrexWater
+namespace TrexWater.Watering
 {
-	public class Application : IApplication
+	public class WaterSystem
 	{
 		private IWaterControllerFactory WaterControllerFactory { get; }
 		private IGpioPinFactory GpioPinFactory { get; }
 		private Dictionary<string, IWaterController> IdToWaterController { get; }
 		public bool IsInitialized { get; private set; }
-		private ILogger<Application> Logger { get; }
-		public Application(IWaterControllerFactory waterControllerFactory, IGpioPinFactory gpioPinFactory, ILoggerFactory loggerFactory)
+		private ILogger<WaterSystem> Logger { get; }
+		public WaterSystem(IWaterControllerFactory waterControllerFactory, IGpioPinFactory gpioPinFactory, ILoggerFactory loggerFactory)
 		{
-			Logger = loggerFactory.CreateLogger<Application>();
+			Logger = loggerFactory.CreateLogger<WaterSystem>();
 
 			WaterControllerFactory = waterControllerFactory;
 			GpioPinFactory = gpioPinFactory;
@@ -28,7 +29,7 @@ namespace TrexWater
 		{
 			if (IsInitialized)
 			{
-				throw new InvalidOperationException($"{nameof(Application)} is already initialized");
+				throw new InvalidOperationException($"{nameof(WaterSystem)} is already initialized");
 			}
 			Logger.LogTrace("Initializing..");
 			var waterControllerConfigs = new[]
@@ -57,7 +58,7 @@ namespace TrexWater
 		{
 			if (!IsInitialized)
 			{
-				throw new InvalidOperationException($"{nameof(Application)} is not initialized");
+				throw new InvalidOperationException($"{nameof(WaterSystem)} is not initialized");
 			}
 			Logger.LogInformation("Application starting..");
 			DisableWaterControllers();

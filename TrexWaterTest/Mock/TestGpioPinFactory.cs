@@ -1,4 +1,5 @@
 ﻿using TrexWater;
+using TrexWater.Gpio;
 using Unosquare.RaspberryIO.Abstractions;
 
 namespace TrexWaterTest.Mock

@@ -1,6 +1,6 @@
 ﻿using Unosquare.RaspberryIO.Abstractions;
 
-namespace TrexWater
+namespace TrexWater.Gpio
 {
 	public interface IGpioPinFactory
 	{

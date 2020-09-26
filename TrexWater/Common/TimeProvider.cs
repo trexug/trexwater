@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace TrexWater
+namespace TrexWater.Common
 {
 	public class TimeProvider : ITimeProvider
 	{

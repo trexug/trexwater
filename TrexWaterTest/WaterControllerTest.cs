@@ -1,5 +1,6 @@
 ﻿using System;
 using TrexWater;
+using TrexWater.Watering;
 using TrexWaterTest.Mock;
 using Xunit;
 
@@ -15,10 +16,10 @@ namespace TrexWaterTest
 		public WaterControllerTest()
 		{
 			WaterController01 = new WaterControllerContext(Unosquare.RaspberryIO.Abstractions.BcmPin.Gpio00, 0);
-			WaterController02 = new WaterControllerContext(Unosquare.RaspberryIO.Abstractions.BcmPin.Gpio00, 0.016);
-			WaterController03 = new WaterControllerContext(Unosquare.RaspberryIO.Abstractions.BcmPin.Gpio00, 2);
-			WaterController04 = new WaterControllerContext(Unosquare.RaspberryIO.Abstractions.BcmPin.Gpio00, 0.05);
-			WaterController05 = new WaterControllerContext(Unosquare.RaspberryIO.Abstractions.BcmPin.Gpio00, 0.12);
+			WaterController02 = new WaterControllerContext(Unosquare.RaspberryIO.Abstractions.BcmPin.Gpio26, 0.016);
+			WaterController03 = new WaterControllerContext(Unosquare.RaspberryIO.Abstractions.BcmPin.Gpio20, 2);
+			WaterController04 = new WaterControllerContext(Unosquare.RaspberryIO.Abstractions.BcmPin.Gpio21, 0.05);
+			WaterController05 = new WaterControllerContext(Unosquare.RaspberryIO.Abstractions.BcmPin.Gpio26, 0.12);
 		}
 		[Fact]
 		public void TurnOnTwiceFails()
@@ -44,11 +45,6 @@ namespace TrexWaterTest
 			Assert.True(WaterController01.GpioPin.OutputValue == WaterController.PIN_ON);
 			WaterController01.WaterController.TurnOff();
 			Assert.True(WaterController01.GpioPin.OutputValue == WaterController.PIN_OFF);
-		}
-		[Fact]
-		public void CalculatesWaterUsage()
-		{
-
 		}
 	}
 }

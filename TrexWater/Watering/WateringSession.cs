@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace TrexWater
+namespace TrexWater.Watering
 {
 	public class WateringSession
 	{

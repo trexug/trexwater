@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using TrexWater.Common;
 using Unosquare.RaspberryIO.Abstractions;
 
-namespace TrexWater
+namespace TrexWater.Watering
 {
 	public class WaterControllerFactory : IWaterControllerFactory
 	{
