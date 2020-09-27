@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Text;
+﻿using Microsoft.Extensions.Logging;
+using System;
 using TrexWater.Common;
 using Unosquare.RaspberryIO.Abstractions;
 
@@ -16,9 +14,11 @@ namespace TrexWater.Watering
 		public bool IsOn { get; private set; }
 		public double LitersPerSecond { get; }
 		private ITimeProvider TimeProvider { get; }
-
-		public WaterController(IGpioPin pin, double litersPerSecond, ITimeProvider timeProvider)
+		private ILogger<WaterController> Logger { get; }
+		public WaterController(ILoggerFactory loggerFactory, IGpioPin pin, double litersPerSecond, ITimeProvider timeProvider)
 		{
+			Logger = loggerFactory.CreateLogger<WaterController>();
+
 			TimeProvider = timeProvider;
 
 			Pin = pin;
@@ -37,6 +37,7 @@ namespace TrexWater.Watering
 
 			Pin.Write(PIN_ON);
 			IsOn = true;
+			Logger.LogTrace("On written to bcm pin: '{0}'", Pin.BcmPin);
 			TurnedOnTime = TimeProvider.Now;
 		}
 
@@ -48,8 +49,10 @@ namespace TrexWater.Watering
 			}
 			Pin.Write(PIN_OFF);
 			IsOn = false;
+			Logger.LogTrace("Off written to bcm pin: '{0}'", Pin.BcmPin);
 			DateTime now = TimeProvider.Now;
 			TimeSpan span = now - TurnedOnTime;
+			Logger.LogTrace("Pin: '{0}' was on for {1:0.00} seconds", Pin.BcmPin, span.TotalSeconds);
 			return new WateringSession(TurnedOnTime, now, span.TotalSeconds * LitersPerSecond);
 		}
 	}

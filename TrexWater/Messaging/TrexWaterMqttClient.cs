@@ -73,6 +73,7 @@ namespace TrexWater.Messaging
 
 		private Task HandleMessageReceived(MqttApplicationMessage message)
 		{
+			Logger.LogTrace("Message received");
 			Match match = CommandTopicRegex.Match(message.Topic);
 			if (match.Success)
 			{
@@ -81,6 +82,7 @@ namespace TrexWater.Messaging
 				string payload = message.ConvertPayloadToString();
 				if (!WaterSystem.TryGet(waterControllerId, out IWaterController waterController))
 				{
+					Logger.LogWarning($"Water controller: '{waterControllerId}' not found");
 					return Task.CompletedTask;
 				}
 				switch (command)
@@ -88,6 +90,7 @@ namespace TrexWater.Messaging
 					case FLOW_TOPIC:
 						break;
 					default:
+						Logger.LogWarning($"Unknown command topic '{command}'");
 						return SendCommandResponseAsync(waterControllerId, COMMAND_UNKNOWN_PAYLOAD);
 				}
 				switch (payload)
@@ -97,16 +100,29 @@ namespace TrexWater.Messaging
 						{
 							waterController.TurnOn();
 						}
+						else
+						{
+							Logger.LogTrace($"Water controller: '{waterControllerId}' is already on");
+						}
 						return SendCommandResponseAsync(waterControllerId, COMMAND_FLOW_ON_PAYLOAD);
 					case OFF_PAYLOAD:
 						if (waterController.IsOn)
 						{
 							waterController.TurnOff();
 						}
+						else
+						{
+							Logger.LogTrace($"Water controller: '{waterControllerId}' is already off");
+						}
 						return SendCommandResponseAsync(waterControllerId, COMMAND_FLOW_OFF_PAYLOAD);
 					default:
+						Logger.LogWarning($"Unknown payload '{payload}'");
 						return Task.CompletedTask;
 				}
+			}
+			else
+			{
+				Logger.LogTrace("Topic does not match expectation");
 			}
 			return Task.CompletedTask;
 		}
