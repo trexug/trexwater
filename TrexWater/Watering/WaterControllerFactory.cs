@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using TrexWater.Common;
@@ -9,14 +10,16 @@ namespace TrexWater.Watering
 	public class WaterControllerFactory : IWaterControllerFactory
 	{
 		private ITimeProvider TimeProvider { get; }
-		public WaterControllerFactory(ITimeProvider timeProvider)
+		private ILoggerFactory LoggerFactory { get; }
+		public WaterControllerFactory(ILoggerFactory loggerFactory, ITimeProvider timeProvider)
 		{
+			LoggerFactory = loggerFactory;
 			TimeProvider = timeProvider;
 		}
 
 		public IWaterController CreateWaterController(IGpioPin pin, double litersPerSecond)
 		{
-			return new WaterController(pin, litersPerSecond, TimeProvider);
+			return new WaterController(LoggerFactory, pin, litersPerSecond, TimeProvider);
 		}
 	}
 }
