@@ -1,34 +1,40 @@
-﻿using MQTTnet;
+﻿using Microsoft.Extensions.Options;
+using MQTTnet;
 using MQTTnet.Client.Options;
 using MQTTnet.Extensions.ManagedClient;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using TrexWater.Watering;
 
 namespace TrexWater.Messaging
 {
-	public class TrexWaterMqttClient
+	public class TrexWaterMqttClient : ITrexWaterMqttClient
 	{
 		public const string ON_PAYLOAD = "ON";
 		public const string OFF_PAYLOAD = "OFF";
 		public const string ONLINE_PAYLOAD = "ONLINE";
 		public const string OFFLINE_PAYLOAD = "OFFLINE";
 
+		public const string APPLICATION = "trew";
 		public const string STATUS_TOPIC = "tele";
 		public const string RESPONSE_TOPIC = "stat";
 		public const string COMMAND_TOPIC = "cmnd";
+		private IWaterSystem WaterSystem { get; }
 		private IManagedMqttClient Client { get; }
 		private ManagedMqttClientOptions ClientOptions { get; }
 		private MqttOptions Options { get; }
-		public string GetFlowPostfix(string waterControllerId) => $"{Options.LocalDeviceName}/{waterControllerId}/FLOW"; // Eg. wdev/bas01/FLOW
-		public string GetFlowResponseTopic(string waterControllerId) => $"{RESPONSE_TOPIC}/{GetFlowPostfix(waterControllerId)}"; // Eg. stat/wdev/bas01/FLOW
-		public string GetResultResponseTopic(string waterControllerId) => $"{RESPONSE_TOPIC}/{Options.LocalDeviceName}/{waterControllerId}/RESULT"; // Eg. stat/wdev/bas01/RESULT
-		public string OnlineStatusTopic => $"{STATUS_TOPIC}/{Options.LocalDeviceName}/LWT"; // Eg. tele/wdev/LWT
-		public string GetFlowStatusTopic(string waterControllerId) => $"{STATUS_TOPIC}/{GetFlowPostfix(waterControllerId)}"; // Eg. tele/wdev/bas01/FLOW
-		public string CommandTopicSubscription => $"{COMMAND_TOPIC}/{Options.LocalDeviceName}/#"; // Eg. cmnd/wdev/#
-		public TrexWaterMqttClient(MqttOptions options)
+		public string LocalDeviceWithApplication => $"{Options.LocalDeviceName}/{APPLICATION}";
+		public string GetFlowPostfix(string waterControllerId) => $"{LocalDeviceWithApplication}/{waterControllerId}/FLOW"; // Eg. wdev/trew/bas01/FLOW
+		public string GetFlowResponseTopic(string waterControllerId) => $"{RESPONSE_TOPIC}/{GetFlowPostfix(waterControllerId)}"; // Eg. stat/wdev/trew/bas01/FLOW
+		public string GetResultResponseTopic(string waterControllerId) => $"{RESPONSE_TOPIC}/{LocalDeviceWithApplication}/{waterControllerId}/RESULT"; // Eg. stat/wdev/bas01/RESULT
+		public string OnlineStatusTopic => $"{STATUS_TOPIC}/{LocalDeviceWithApplication}/LWT"; // Eg. tele/wdev/trew/LWT
+		public string GetFlowStatusTopic(string waterControllerId) => $"{STATUS_TOPIC}/{GetFlowPostfix(waterControllerId)}"; // Eg. tele/wdev/trew/bas01/FLOW
+		public string CommandTopicSubscription => $"{COMMAND_TOPIC}/{LocalDeviceWithApplication}/{APPLICATION}/#"; // Eg. cmnd/wdev/trew/#
+		public TrexWaterMqttClient(IWaterSystem waterSystem, IOptions<MqttOptions> options)
 		{
-			Options = options;
+			WaterSystem = waterSystem;
+			Options = options.Value;
 			ClientOptions = new ManagedMqttClientOptionsBuilder()
 				.WithAutoReconnectDelay(TimeSpan.FromMilliseconds(Options.ReconnectTimeoutMiliseconds))
 				.WithClientOptions
@@ -37,7 +43,7 @@ namespace TrexWater.Messaging
 				).Build();
 
 			Client = new MqttFactory().CreateManagedMqttClient();
-			
+
 		}
 
 		private MqttClientOptionsBuilder ConfigureClientOptions(MqttClientOptionsBuilder builder, MqttOptions options)

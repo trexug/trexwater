@@ -1,13 +1,12 @@
 ﻿using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
-using System.Threading;
 using TrexWater.Gpio;
 using Unosquare.RaspberryIO.Abstractions;
 
 namespace TrexWater.Watering
 {
-	public class WaterSystem
+	public class WaterSystem : IWaterSystem
 	{
 		private IWaterControllerFactory WaterControllerFactory { get; }
 		private IGpioPinFactory GpioPinFactory { get; }
@@ -53,37 +52,8 @@ namespace TrexWater.Watering
 		}
 
 		public IWaterController this[string id] => IdToWaterController[id];
-
-		public void Run()
-		{
-			if (!IsInitialized)
-			{
-				throw new InvalidOperationException($"{nameof(WaterSystem)} is not initialized");
-			}
-			Logger.LogInformation("Application starting..");
-			DisableWaterControllers();
-
-			Logger.LogInformation("Application running");
-			try
-			{
-				var c = IdToWaterController["B01"];
-				for (int i = 0;  i < 10; ++i)
-				{
-					c.TurnOn();
-					Logger.LogTrace("Going to sleep..");
-					Thread.Sleep(2000);
-					c.TurnOff();
-					Logger.LogTrace("Going to sleep..");
-					Thread.Sleep(500);
-				}
-			}
-			catch (Exception ex)
-			{
-				Logger.LogError(ex, "Application encountered an error.");
-			}
-
-			Logger.LogInformation("Application stopped.");
-		}
+		public bool ContainsId(string id) => IdToWaterController.ContainsKey(id);
+		public bool TryGet(string id, out IWaterController waterController) => IdToWaterController.TryGetValue(id, out waterController);
 
 		private void DisableWaterControllers()
 		{

@@ -2,6 +2,7 @@
 {
 	public class MqttOptions
 	{
+		public const string MQTT = "Mqtt";
 		public string ClientName { get; set; } = "TrexWater";
 		public string Host { get; set; }
 		public int? Port { get; set; }
