@@ -17,9 +17,9 @@ namespace TrexWater.Watering
 			TimeProvider = timeProvider;
 		}
 
-		public IWaterController CreateWaterController(IGpioPin pin, double litersPerSecond)
+		public IWaterController CreateWaterController(string id, IGpioPin pin, double litersPerSecond)
 		{
-			return new WaterController(LoggerFactory, pin, litersPerSecond, TimeProvider);
+			return new WaterController(id, LoggerFactory, pin, litersPerSecond, TimeProvider);
 		}
 	}
 }

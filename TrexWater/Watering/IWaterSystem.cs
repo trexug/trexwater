@@ -1,8 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace TrexWater.Watering
 {
-	public interface IWaterSystem : IDisposable
+	public interface IWaterSystem : IDisposable, IEnumerable<IWaterController>
 	{
 		IWaterController this[string id] { get; }
 

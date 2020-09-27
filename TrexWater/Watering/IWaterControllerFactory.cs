@@ -4,6 +4,6 @@ namespace TrexWater.Watering
 {
 	public interface IWaterControllerFactory
 	{
-		IWaterController CreateWaterController(IGpioPin pin, double litersPerSecond);
+		public IWaterController CreateWaterController(string id, IGpioPin pin, double litersPerSecond);
 	}
 }

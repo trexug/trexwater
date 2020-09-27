@@ -169,8 +169,30 @@ namespace TrexWater.Messaging
 			cancellationToken.ThrowIfCancellationRequested();
 			await Client.SubscribeAsync(CommandTopicSubscription);
 			await Client.StartAsync(ClientOptions);
-			await SendMessageAsync(OnlineStatusTopic, ONLINE_PAYLOAD, true, cancellationToken);
+			await SendOnlineStatusAsync(true);
+			foreach (var waterController in WaterSystem)
+			{
+				waterController.FlowOn += WaterControllerFlowOn;
+				waterController.FlowOff += WaterControllerFlowOff;
+			}
 		}
+
+		private async void WaterControllerFlowOff(object sender, WaterControllerOffEventArgs e)
+		{
+			if (sender is WaterController controller)
+			{
+				await SendFlowStatusAsync(controller.Id, false);
+			}
+		}
+
+		private async void WaterControllerFlowOn(object sender, WaterControllerOnEventArgs e)
+		{
+			if (sender is WaterController controller)
+			{
+				await SendFlowStatusAsync(controller.Id, true);
+			}
+		}
+
 		private Task SendCommandResponseAsync(string waterControllerId, string result)
 		{
 			return SendCommandResponseAsync(waterControllerId, result, CancellationToken.None);

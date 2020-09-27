@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using TrexWater.Gpio;
 using Unosquare.RaspberryIO.Abstractions;
@@ -42,7 +43,7 @@ namespace TrexWater.Watering
 			{
 				IGpioPin pin = GpioPinFactory.CreatePin(config.PinId);
 				pin.Write(WaterController.PIN_OFF);
-				IWaterController waterController = WaterControllerFactory.CreateWaterController(pin, config.LitersPerSecond);
+				IWaterController waterController = WaterControllerFactory.CreateWaterController(config.Id, pin, config.LitersPerSecond);
 
 				IdToWaterController.Add(config.Id, waterController);
 			}
@@ -74,5 +75,9 @@ namespace TrexWater.Watering
 				DisableWaterControllers();
 			}
 		}
+
+		public IEnumerator<IWaterController> GetEnumerator() => IdToWaterController.Values.GetEnumerator();
+
+		IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 	}
 }

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using TrexWater;
@@ -12,13 +13,13 @@ namespace TrexWaterTest.Mock
 		public WaterController WaterController { get; }
 		public TestTimeProvider TimeProvider { get; }
 		public TestGpioPin GpioPin { get; }
-		public WaterControllerContext(BcmPin id, double litersPerSecond)
+		public WaterControllerContext(string id, BcmPin pin, double litersPerSecond)
 		{
 			TimeProvider = new TestTimeProvider();
-			GpioPin = new TestGpioPin(id);
+			GpioPin = new TestGpioPin(pin);
 			GpioPin.PinMode = GpioPinDriveMode.Output;
 			GpioPin.Write(WaterController.PIN_OFF);
-			WaterController = new WaterController(GpioPin, litersPerSecond, TimeProvider);
+			WaterController = new WaterController(id, new LoggerFactory(), GpioPin, litersPerSecond, TimeProvider);
 		}
 	}
 }

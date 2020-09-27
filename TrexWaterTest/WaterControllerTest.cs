@@ -15,11 +15,11 @@ namespace TrexWaterTest
 		private WaterControllerContext WaterController05 { get; }
 		public WaterControllerTest()
 		{
-			WaterController01 = new WaterControllerContext(Unosquare.RaspberryIO.Abstractions.BcmPin.Gpio00, 0);
-			WaterController02 = new WaterControllerContext(Unosquare.RaspberryIO.Abstractions.BcmPin.Gpio26, 0.016);
-			WaterController03 = new WaterControllerContext(Unosquare.RaspberryIO.Abstractions.BcmPin.Gpio20, 2);
-			WaterController04 = new WaterControllerContext(Unosquare.RaspberryIO.Abstractions.BcmPin.Gpio21, 0.05);
-			WaterController05 = new WaterControllerContext(Unosquare.RaspberryIO.Abstractions.BcmPin.Gpio26, 0.12);
+			WaterController01 = new WaterControllerContext("T01", Unosquare.RaspberryIO.Abstractions.BcmPin.Gpio00, 0);
+			WaterController02 = new WaterControllerContext("T02", Unosquare.RaspberryIO.Abstractions.BcmPin.Gpio26, 0.016);
+			WaterController03 = new WaterControllerContext("T03", Unosquare.RaspberryIO.Abstractions.BcmPin.Gpio20, 2);
+			WaterController04 = new WaterControllerContext("T04", Unosquare.RaspberryIO.Abstractions.BcmPin.Gpio21, 0.05);
+			WaterController05 = new WaterControllerContext("T05", Unosquare.RaspberryIO.Abstractions.BcmPin.Gpio26, 0.12);
 		}
 		[Fact]
 		public void TurnOnTwiceFails()
