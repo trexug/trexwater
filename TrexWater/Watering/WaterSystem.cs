@@ -55,7 +55,7 @@ namespace TrexWater.Watering
 		public bool ContainsId(string id) => IdToWaterController.ContainsKey(id);
 		public bool TryGet(string id, out IWaterController waterController) => IdToWaterController.TryGetValue(id, out waterController);
 
-		private void DisableWaterControllers()
+		public void DisableWaterControllers()
 		{
 			Logger.LogTrace("Disabling water controllers..");
 			foreach (var waterController in IdToWaterController.Values)
@@ -64,6 +64,14 @@ namespace TrexWater.Watering
 				{
 					waterController.TurnOff();
 				}
+			}
+		}
+
+		public void Dispose()
+		{
+			if (IsInitialized)
+			{
+				DisableWaterControllers();
 			}
 		}
 	}

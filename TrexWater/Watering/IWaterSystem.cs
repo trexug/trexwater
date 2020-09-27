@@ -1,6 +1,8 @@
-﻿namespace TrexWater.Watering
+﻿using System;
+
+namespace TrexWater.Watering
 {
-	public interface IWaterSystem
+	public interface IWaterSystem : IDisposable
 	{
 		IWaterController this[string id] { get; }
 

@@ -11,13 +11,16 @@ using Unosquare.WiringPi;
 
 namespace TrexWater
 {
-	public class Program
+	public class Program : IDisposable
 	{
 		public static void Main(string[] args)
 		{
 			Program program = new Program();
 			program.RunMain();
 		}
+
+		private IWaterSystem WaterSystem { get; set; }
+		private ITrexWaterMqttClient MqttClient { get; set; }
 
 		public void RunMain()
 		{
@@ -26,15 +29,21 @@ namespace TrexWater
 			var logger = serviceProvider.GetService<ILoggerFactory>()
 				.CreateLogger<Program>();
 			logger.LogDebug("Service setup complete");
-			serviceProvider.GetService<IWaterSystem>().Initialize();
-			using (var client = serviceProvider.GetService<ITrexWaterMqttClient>())
+			AppDomain.CurrentDomain.ProcessExit += CurrentDomain_ProcessExit;
+			WaterSystem = serviceProvider.GetService<IWaterSystem>();
+			WaterSystem.Initialize();
+			MqttClient = serviceProvider.GetService<ITrexWaterMqttClient>();
+			MqttClient.StartAsync().Wait();
+			while (Console.ReadLine() != "exit")
 			{
-				client.StartAsync().Wait();
-				while (Console.ReadLine() != "exit")
-				{
 
-				}
 			}
+			Dispose();
+		}
+
+		private void CurrentDomain_ProcessExit(object sender, EventArgs e)
+		{
+			Dispose();
 		}
 
 		protected virtual IServiceProvider ConfigureServices(IServiceCollection serviceCollection)
@@ -61,6 +70,12 @@ namespace TrexWater
 				.Bind(configuration.GetSection(MqttOptions.MQTT));
 
 			return serviceCollection.BuildServiceProvider();
+		}
+
+		public void Dispose()
+		{
+			MqttClient.Dispose();
+			WaterSystem.Dispose();
 		}
 	}
 }
