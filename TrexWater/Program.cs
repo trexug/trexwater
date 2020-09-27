@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using System;
 using TrexWater.Common;
 using TrexWater.Gpio;
+using TrexWater.Messaging;
 using TrexWater.Watering;
 using Unosquare.RaspberryIO;
 using Unosquare.WiringPi;
