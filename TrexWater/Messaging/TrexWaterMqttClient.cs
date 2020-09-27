@@ -1,8 +1,13 @@
-﻿using Microsoft.Extensions.Options;
+﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using MQTTnet;
+using MQTTnet.Client.Connecting;
+using MQTTnet.Client.Disconnecting;
 using MQTTnet.Client.Options;
 using MQTTnet.Extensions.ManagedClient;
 using System;
+using System.Globalization;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using TrexWater.Watering;
@@ -11,28 +16,39 @@ namespace TrexWater.Messaging
 {
 	public class TrexWaterMqttClient : ITrexWaterMqttClient
 	{
-		public const string ON_PAYLOAD = "ON";
-		public const string OFF_PAYLOAD = "OFF";
-		public const string ONLINE_PAYLOAD = "ONLINE";
-		public const string OFFLINE_PAYLOAD = "OFFLINE";
+		private const string ON_PAYLOAD = "ON";
+		private const string OFF_PAYLOAD = "OFF";
+		private const string ONLINE_PAYLOAD = "ONLINE";
+		private const string OFFLINE_PAYLOAD = "OFFLINE";
+		private const string COMMAND_UNKNOWN_PAYLOAD = "{\"COMMAND\": \"UNKNOWN\"}";
+		private const string COMMAND_FLOW_ON_PAYLOAD = "{\"FLOW\": \"ON\"}";
+		private const string COMMAND_FLOW_OFF_PAYLOAD = "{\"FLOW\": \"OFF\"}";
 
-		public const string APPLICATION = "trew";
-		public const string STATUS_TOPIC = "tele";
-		public const string RESPONSE_TOPIC = "stat";
-		public const string COMMAND_TOPIC = "cmnd";
+		private const string APPLICATION = "trew";
+		private const string STATUS_TOPIC = "tele";
+		private const string RESPONSE_TOPIC = "stat";
+		private const string COMMAND_TOPIC = "cmnd";
+		private const string FLOW_TOPIC = "FLOW";
+
+		private const string WATER_CONTROLLER_ID_REGEX_GROUP = "WATER_CONTROLLER_ID";
+		private const string COMMAND_NAME_REGEX_GROUP = "COMMAND_NAME";
+		private ILogger<TrexWaterMqttClient> Logger { get; }
 		private IWaterSystem WaterSystem { get; }
 		private IManagedMqttClient Client { get; }
 		private ManagedMqttClientOptions ClientOptions { get; }
 		private MqttOptions Options { get; }
-		public string LocalDeviceWithApplication => $"{Options.LocalDeviceName}/{APPLICATION}";
-		public string GetFlowPostfix(string waterControllerId) => $"{LocalDeviceWithApplication}/{waterControllerId}/FLOW"; // Eg. wdev/trew/bas01/FLOW
-		public string GetFlowResponseTopic(string waterControllerId) => $"{RESPONSE_TOPIC}/{GetFlowPostfix(waterControllerId)}"; // Eg. stat/wdev/trew/bas01/FLOW
-		public string GetResultResponseTopic(string waterControllerId) => $"{RESPONSE_TOPIC}/{LocalDeviceWithApplication}/{waterControllerId}/RESULT"; // Eg. stat/wdev/bas01/RESULT
-		public string OnlineStatusTopic => $"{STATUS_TOPIC}/{LocalDeviceWithApplication}/LWT"; // Eg. tele/wdev/trew/LWT
-		public string GetFlowStatusTopic(string waterControllerId) => $"{STATUS_TOPIC}/{GetFlowPostfix(waterControllerId)}"; // Eg. tele/wdev/trew/bas01/FLOW
-		public string CommandTopicSubscription => $"{COMMAND_TOPIC}/{LocalDeviceWithApplication}/{APPLICATION}/#"; // Eg. cmnd/wdev/trew/#
-		public TrexWaterMqttClient(IWaterSystem waterSystem, IOptions<MqttOptions> options)
+		private string LocalDeviceWithApplication => $"{Options.LocalDeviceName}/{APPLICATION}";
+		private string GetFlowPostfix(string waterControllerId) => $"{LocalDeviceWithApplication}/{waterControllerId}/{FLOW_TOPIC}"; // Eg. wdev/trew/bas01/FLOW
+		private string GetFlowResponseTopic(string waterControllerId) => $"{RESPONSE_TOPIC}/{GetFlowPostfix(waterControllerId)}"; // Eg. stat/wdev/trew/bas01/FLOW
+		private string GetResultResponseTopic(string waterControllerId) => $"{RESPONSE_TOPIC}/{LocalDeviceWithApplication}/{waterControllerId}/RESULT"; // Eg. stat/wdev/bas01/RESULT
+		private string OnlineStatusTopic => $"{STATUS_TOPIC}/{LocalDeviceWithApplication}/LWT"; // Eg. tele/wdev/trew/LWT
+		private string GetFlowStatusTopic(string waterControllerId) => $"{STATUS_TOPIC}/{GetFlowPostfix(waterControllerId)}"; // Eg. tele/wdev/trew/bas01/FLOW
+		private string CommandTopicSubscription => $"{COMMAND_TOPIC}/{LocalDeviceWithApplication}/#"; // Eg. cmnd/wdev/trew/#
+		private string CommandTopicRegexPattern => $"^{COMMAND_TOPIC}/{LocalDeviceWithApplication}/(?<{WATER_CONTROLLER_ID_REGEX_GROUP}>[^/]+)/(?<{COMMAND_NAME_REGEX_GROUP}>[^/]+)$"; // Eg. cmnd/wdev/trew/#
+		private Regex CommandTopicRegex { get; }
+		public TrexWaterMqttClient(ILoggerFactory loggerFactory, IWaterSystem waterSystem, IOptions<MqttOptions> options)
 		{
+			Logger = loggerFactory.CreateLogger<TrexWaterMqttClient>();
 			WaterSystem = waterSystem;
 			Options = options.Value;
 			ClientOptions = new ManagedMqttClientOptionsBuilder()
@@ -43,7 +59,66 @@ namespace TrexWater.Messaging
 				).Build();
 
 			Client = new MqttFactory().CreateManagedMqttClient();
+			Client.UseApplicationMessageReceivedHandler(HandleMessageReceived);
+			Client.UseConnectedHandler(HandleConnected);
+			Client.UseDisconnectedHandler(HandleDisconnected);
 
+			CommandTopicRegex = new Regex(CommandTopicRegexPattern, RegexOptions.Compiled);
+		}
+
+		private Task HandleMessageReceived(MqttApplicationMessageReceivedEventArgs eventArgs)
+		{
+			return HandleMessageReceived(eventArgs.ApplicationMessage);
+		}
+
+		private Task HandleMessageReceived(MqttApplicationMessage message)
+		{
+			Match match = CommandTopicRegex.Match(message.Topic);
+			if (match.Success)
+			{
+				string waterControllerId = match.Groups[WATER_CONTROLLER_ID_REGEX_GROUP].Value;
+				string command = match.Groups[COMMAND_NAME_REGEX_GROUP].Value;
+				string payload = message.ConvertPayloadToString();
+				if (!WaterSystem.TryGet(waterControllerId, out IWaterController waterController))
+				{
+					return Task.CompletedTask;
+				}
+				switch (command)
+				{
+					case FLOW_TOPIC:
+						break;
+					default:
+						return SendCommandResponseAsync(waterControllerId, COMMAND_UNKNOWN_PAYLOAD);
+				}
+				switch (payload)
+				{
+					case ON_PAYLOAD:
+						if (!waterController.IsOn)
+						{
+							waterController.TurnOn();
+						}
+						return SendCommandResponseAsync(waterControllerId, COMMAND_FLOW_ON_PAYLOAD);
+					case OFF_PAYLOAD:
+						if (waterController.IsOn)
+						{
+							waterController.TurnOff();
+						}
+						return SendCommandResponseAsync(waterControllerId, COMMAND_FLOW_OFF_PAYLOAD);
+					default:
+						return Task.CompletedTask;
+				}
+			}
+			return Task.CompletedTask;
+		}
+
+		private void HandleConnected(MqttClientConnectedEventArgs eventArgs)
+		{
+			Logger.LogInformation($"Connected to {Options.Host}");
+		}
+
+		private void HandleDisconnected(MqttClientDisconnectedEventArgs eventArgs)
+		{
+			Logger.LogWarning("Disconnected");
 		}
 
 		private MqttClientOptionsBuilder ConfigureClientOptions(MqttClientOptionsBuilder builder, MqttOptions options)
@@ -80,36 +155,32 @@ namespace TrexWater.Messaging
 			await Client.StartAsync(ClientOptions);
 			await SendMessageAsync(OnlineStatusTopic, ONLINE_PAYLOAD, true, cancellationToken);
 		}
-		public Task SendCommandResponseAsync(string waterControllerId, string result, bool isOn)
+		private Task SendCommandResponseAsync(string waterControllerId, string result)
 		{
-			return SendCommandResponseAsync(waterControllerId, result, isOn, CancellationToken.None);
+			return SendCommandResponseAsync(waterControllerId, result, CancellationToken.None);
 		}
 
-		public Task SendCommandResponseAsync(string waterControllerId, string result, bool isOn, CancellationToken cancellationToken)
+		private Task SendCommandResponseAsync(string waterControllerId, string result, CancellationToken cancellationToken)
 		{
 			cancellationToken.ThrowIfCancellationRequested();
-			return Task.WhenAll
-			(
-				SendMessageAsync(GetResultResponseTopic(waterControllerId), result, false, cancellationToken),
-				SendMessageAsync(GetFlowResponseTopic(waterControllerId), isOn ? ON_PAYLOAD : OFF_PAYLOAD, false, cancellationToken)
-			);
+			return SendMessageAsync(GetResultResponseTopic(waterControllerId), result, false, cancellationToken);
 		}
 
-		public Task SendFlowStatusAsync(string waterControllerId, bool on)
+		private Task SendFlowStatusAsync(string waterControllerId, bool on)
 		{
 			return SendFlowStatusAsync(waterControllerId, on, CancellationToken.None);
 		}
-		public Task SendFlowStatusAsync(string waterControllerId, bool isOn, CancellationToken cancellationToken)
+		private Task SendFlowStatusAsync(string waterControllerId, bool isOn, CancellationToken cancellationToken)
 		{
 			cancellationToken.ThrowIfCancellationRequested();
 			return SendMessageAsync(GetFlowStatusTopic(waterControllerId), isOn ? ON_PAYLOAD : OFF_PAYLOAD, true, cancellationToken);
 		}
 
-		public Task SendOnlineStatusAsync(bool isOnline)
+		private Task SendOnlineStatusAsync(bool isOnline)
 		{
 			return SendOnlineStatusAsync(isOnline, CancellationToken.None);
 		}
-		public Task SendOnlineStatusAsync(bool isOnline, CancellationToken cancellationToken)
+		private Task SendOnlineStatusAsync(bool isOnline, CancellationToken cancellationToken)
 		{
 			cancellationToken.ThrowIfCancellationRequested();
 			return SendMessageAsync(OnlineStatusTopic, isOnline ? ONLINE_PAYLOAD : OFFLINE_PAYLOAD, true, cancellationToken);
@@ -119,7 +190,7 @@ namespace TrexWater.Messaging
 		{
 			cancellationToken.ThrowIfCancellationRequested();
 			var message = CreateMessage(topic, payload, retain);
-			return Client.PublishAsync(message, cancellationToken);
+			return SendMessageAsync(message, cancellationToken);
 		}
 
 		private MqttApplicationMessage CreateMessage(string topic, string payload, bool retain)
@@ -130,6 +201,19 @@ namespace TrexWater.Messaging
 				.WithAtLeastOnceQoS()
 				.WithRetainFlag(retain)
 				.Build();
+		}
+
+		private Task SendMessageAsync(MqttApplicationMessage message, CancellationToken cancellationToken)
+		{
+			return Client.PublishAsync(message, cancellationToken);
+		}
+
+		public void Dispose()
+		{
+			if (Client.IsConnected)
+			{
+				SendMessageAsync(GetLastWill(), CancellationToken.None).Wait(5000);
+			}
 		}
 	}
 }

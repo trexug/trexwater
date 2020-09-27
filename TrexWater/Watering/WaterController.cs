@@ -46,7 +46,6 @@ namespace TrexWater.Watering
 			{
 				throw new InvalidOperationException($"{nameof(WaterController)} is already off.");
 			}
-
 			Pin.Write(PIN_OFF);
 			IsOn = false;
 			DateTime now = TimeProvider.Now;

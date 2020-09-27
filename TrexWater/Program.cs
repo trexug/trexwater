@@ -26,16 +26,17 @@ namespace TrexWater
 			var logger = serviceProvider.GetService<ILoggerFactory>()
 				.CreateLogger<Program>();
 			logger.LogDebug("Service setup complete");
-
-			var client = serviceProvider.GetService<ITrexWaterMqttClient>();
-			client.StartAsync().Wait();
-			Console.ReadLine();
+			serviceProvider.GetService<IWaterSystem>().Initialize();
+			using (var client = serviceProvider.GetService<ITrexWaterMqttClient>())
+			{
+				client.StartAsync().Wait();
+				Console.ReadLine();
+			}
 		}
 
 		protected virtual IServiceProvider ConfigureServices(IServiceCollection serviceCollection)
 		{
-			//Pi.Init<BootstrapWiringPi>();
-
+			Pi.Init<BootstrapWiringPi>();
 			IConfigurationRoot configuration = new ConfigurationBuilder()
 				.AddJsonFile("appsettings.json")
 				.Build();
