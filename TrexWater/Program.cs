@@ -30,7 +30,10 @@ namespace TrexWater
 			using (var client = serviceProvider.GetService<ITrexWaterMqttClient>())
 			{
 				client.StartAsync().Wait();
-				Console.ReadLine();
+				while (Console.ReadLine() != "exit")
+				{
+
+				}
 			}
 		}
 
